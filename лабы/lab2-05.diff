@@ -1,0 +1,57 @@
+﻿// Используем вспомогательный модуль для S-функции
+import "support.scriptc0" type Support s;
+
+// Движение центра масс
+//// Кинематика
+y1' = y4;
+y2' = y5;
+y3' = y6;
+//// Динамика
+y4' = g * y4 / s.vector3dLength(y4, y5, y6)
+            * (nxt - y5 / s.vector2dLength(y4, y6) * nyt)
+        - g * y6 / s.vector2dLength(y4, y6) * nzt;
+
+y5' = g * y5 / s.vector3dLength(y4, y5, y6) * nxt
+        + g * s.vector2dLength(y4, y6)
+            / s.vector3dLength(y4, y5, y6) * nyt
+        - g;
+
+y6' = g * y6 / s.vector3dLength(y4, y5, y6)
+            * (nxt - y5 / s.vector2dLength(y4, y6) * nyt)
+        + g * y4 / s.vector2dLength(y4, y6) * nzt;
+
+// Система управления
+// Параметры:
+//           Kv, Kny, Kom, Knzt
+//
+//           nxt_min, nxt_max
+//           nyt_min, nyt_max
+//           nzt_min, nzt_max
+// Входы:
+//       v_z, y5_z, delta_psi_z
+
+//// Модуль скорости
+v = s.vector3dLength(y4, y5, y6);
+
+//// Перегрузки
+nxt = Kv * (v_z - v);
+nxt = s.limit(nxt, nxt_min, nxt_max);
+
+nyt = 1.0 + Kny * (y5_z - y5);
+nyt = s.limit(nyt, nyt_min, nyt_max);
+
+vg = s.vector2dLength(y4, y6);
+
+////// Текущий курс
+sin_psi = y6 / vg;
+cos_psi = y4 / vg;
+atan2_psi = atan2(sin_psi, cos_psi);
+psi = (y6 >= 0.0
+        ? (atan2_psi)
+        : (2.0 * math.const_pi() + atan2_psi)
+        );
+////// Угловая скорость
+om = Kom * delta_psi_z;
+
+nzt = Knzt * om;
+nzt = s.limit(nzt, nzt_min, nzt_max);
