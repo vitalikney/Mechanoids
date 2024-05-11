@@ -1,0 +1,920 @@
+﻿// Импорт модели БЛА
+import "lab2-05.diff" type LA;
+// Импорт модуля Системы управления модели
+import "lab2-05-control.scriptc0" type Control;
+// Импорт модуля Целеуказателя системы управления модели
+import "lab2-05-control-target.scriptc0" type Target;
+// Импорт модуля Цели бомбометания
+import "lab2-06-0.scriptc0" type Ship;
+// Импорт вспомогательного модуля
+import "support.scriptc0" type S s;
+
+// /-----------------------------------------------------\
+// |                   МОДЕЛЬ ВЕДУЩЕГО                   |
+// \-----------------------------------------------------/
+LA __la_main = {
+    g : 9.81,
+    y1 : 0.0,  y2 : 0.0,       y3 : 0.0,
+    y4 : 1.0,       y5 : 0.0,       y6 : 0.0,
+
+    nyt : 1.0,
+
+    Kny : 1.0,
+    Kv : 0.1, v_z : 100.0,
+
+    nyt_min : -1.0,     nyt_max : 5.0,
+    nxt_min : -0.1,     nxt_max : 0.5,
+
+    Kom : 0.5,          Knzt : 10.5,
+    nzt_min : -2.0,     nzt_max : 2.0,
+};
+
+// /-----------------------------------------------------\
+// |                   МОДЕЛИ  ВЕДОМЫХ                   |
+// \-----------------------------------------------------/
+LA __la[4] = [__la_main, __la_main, __la_main, __la_main];
+__la[0].y1 += 3000.0;
+__la[0].y3 += -4500.0;
+
+__la[1].y1 += 3000.0;
+__la[1].y3 += -1500.0;
+
+__la[2].y1 += 3000.0;
+__la[2].y3 += 1500.0;
+
+__la[3].y1 += 3000.0;
+__la[3].y3 += 4500.0;
+
+// /-----------------------------------------------------\
+// |                   МОДЕЛИ РАКЕТ                      |
+// \-----------------------------------------------------/
+LA __rocket = {
+    g : 9.81,
+    y1 : 100000.0,       y2 : 100.0,    y3 : 140000.0,
+    y4 : 0.0,       y5 : 0.0,       y6 : -1.0,
+
+    nyt : 1.0,
+
+    Kny : 1.0,
+    Kv : 0.1, v_z : 100.0,
+
+    nyt_min : -8.0,     nyt_max : 8.0,
+    nxt_min : -0.1,     nxt_max : 0.5,
+
+    Kom : 0.5,          Knzt : 10.5,
+    nzt_min : -6.0,     nzt_max : 6.0,
+};
+
+LA __rockets[2] = [__rocket, __rocket];
+__rockets[1].y1 += 5000.0;
+
+// /-----------------------------------------------------\
+// |             МОДЕЛИ ВЫПУСКАЕМЫХ РАКЕТ                |
+// \-----------------------------------------------------/
+LA __la_rockets[2] = [__rocket, __rocket];
+
+// /-----------------------------------------------------\
+// |                   МОДЕЛИ  БОМБ                      |
+// \-----------------------------------------------------/
+LA __bomb = {
+    g : 9.81,
+    y1 : 10000.0,   y2 : 100.0,    y3 : -40000.0,
+    y4 : 1.0,       y5 : 0.0,      y6 : 0.0,
+
+    nyt : 0.0, nxt : 0.0, nzt : 0.0,
+
+    Kny : 1.0,
+    Kv : 0.1, v_z : 100.0,
+
+    nyt_min : 0.0,     nyt_max : 0.0,
+    nxt_min : -1.0,     nxt_max : 0.0,
+
+    Kom : 0.5,          Knzt : 10.5,
+    nzt_min : 0.0,      nzt_max : 0.0,
+};
+
+LA bombs[2] = [__bomb, __bomb];
+
+// /-----------------------------------------------------\
+// |                   СУ ВЕДУЩЕГО                       |
+// \-----------------------------------------------------/
+//.. Радиус окружности начального облёта по часовой стрелке
+float __radius = 40000.0;
+//.. Количество точек на окружности начального облёта
+int __n_points = 32;
+//.. Количество точек на окружности начального облёта,
+//.. которые следует пройти
+int __n_points_to_pass = __n_points;//3 * __n_points / 4;
+//.. Маршрут начального облёта
+float __la_main_ctrl_route[__n_points_to_pass, 4];
+
+//.. Угол в радианах
+float __a = 0;
+//.. Заполнение маршрута начального облёта
+for (int i = 0; i < __n_points_to_pass; ++i)
+{
+    // x, height, z, v,
+    __la_main_ctrl_route[i, 0] = __radius * math.cos(__a);
+    __la_main_ctrl_route[i, 1] = 150.0;
+    __la_main_ctrl_route[i, 2] = __radius * math.sin(__a);
+    __la_main_ctrl_route[i, 3] = 200.0;
+
+    __a = __a + 2 * math.const_pi() / __n_points;
+}
+
+//.. Маршрут подлёта к месту боевых действий
+float la_main_ctrl_prepare_route[2, 4] = [
+    [__radius, 150.0, __radius + 50000.0, 200.0],
+    [__radius + 30000.0, 150.0, __radius + 50000.0, 200.0]
+];
+
+//.. Создание объекта СУ для ведущего
+Control la_main_ctrl = {
+    la_name : "ПЛА"
+    , MODE_PPM_route : __la_main_ctrl_route
+};
+la_main_ctrl.la = __la_main;
+la_main_ctrl.mode = la_main_ctrl.MODE_LAUNCH;
+
+// /-----------------------------------------------------\
+// |                   СУ ВЕДОМЫХ                        |
+// \-----------------------------------------------------/
+//.. Создание объектов СУ для ведомых
+Control la_ctrl[4] = [ {}
+                     , {}
+                     , {}
+                     , {}
+                     ];
+//.. Настройка объектов СУ для ведомых
+for (int i = 0; i < 4; ++i)
+{
+    la_ctrl[i].la = __la[i];
+    la_ctrl[i].la_name = "БЛА" + (i + 1);
+    la_ctrl[i].mode = la_ctrl[i].MODE_LAUNCH;
+}
+
+// /-----------------------------------------------------\
+// |                     СУ РАКЕТ                        |
+// \-----------------------------------------------------/
+//.. Создание объектов СУ для ракет
+Control rocket_ctrl[2];
+//.. Настройка объектов СУ для ракет
+for (int i = 0; i < 2; ++i)
+{
+    rocket_ctrl[i].mode = rocket_ctrl[i].MODE_IDLE;
+    rocket_ctrl[i].target.v = __rockets[0].v_z;
+    rocket_ctrl[i].la = __rockets[i];
+}
+
+// /-----------------------------------------------------\
+// |              СУ ВЫПУСКАЕМЫХ РАКЕТ                   |
+// \-----------------------------------------------------/
+//.. Создание объектов СУ для выпускаемых ракет
+Control la_rocket_ctrl[2];
+//.. Создание объектов СУ для выпускаемых ракет
+for (int i = 0; i < 2; ++i)
+{
+    la_rocket_ctrl[i].mode = la_rocket_ctrl[i].MODE_MANUAL;
+    la_rocket_ctrl[i].la = __la_rockets[i];
+}
+
+// /-----------------------------------------------------\
+// |          МОДЕЛИ СТАЦИОНАРНЫХ ОБЪЕКТОВ               |
+// \-----------------------------------------------------/
+Ship ship[2] = [
+    { y1 : __radius + 70000.0, y2 : 0.0, y3 : __radius + 51000.0 }
+    , { y1 : __radius + 77000.0, y2 : 0.0, y3 : __radius + 70000.0 }
+];
+
+// /-----------------------------------------------------\
+// |          ЦИФРОВЫЕ АВТОМАТЫ СОСТОЯНИЙ                |
+// \-----------------------------------------------------/
+//.. Состояние ведущего
+int la_main_state = 0;
+//.. Состояния ведомых
+int la_states[4] = [ 0, 0, 0, 0 ];
+
+// /-----------------------------------------------------\
+// |               ФЛАГ ОБЛЁТА АЭРОДРОМА                 |
+// \-----------------------------------------------------/
+bool circle_route_enabled = true;
+
+// /-----------------------------------------------------\
+// |       ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ПРИБАВЛЯЕМЫХ            |
+// |       СКОРОСТЕЙ СКОРОСТЯМ ВЕДОМЫХ                   |
+// \-----------------------------------------------------/
+float debug_accel[4] = [0.0, 0.0, 0.0, 0.0];
+
+// /-----------------------------------------------------\
+// |        ФЛАГ ЗАПУСКА ЛИЧНЫХ СЦЕНАРИЕВ ВЕДОМЫХ        |
+// \-----------------------------------------------------/
+bool free_drones = false;
+
+// /-----------------------------------------------------\
+// |            ПОСЛЕДНЯЯ ТОЧКА ВЕДОМОГО                 |
+// \-----------------------------------------------------/
+Target la_main_finish_target;
+la_main_finish_target.x = 0.0;
+la_main_finish_target.height = 150.0;
+la_main_finish_target.z = 0.0;
+la_main_finish_target.v = 100.0;
+
+// /-----------------------------------------------------\
+// |               ФЛАГИ РАЗРУШЕНИЯ РАКЕТ                |
+// \-----------------------------------------------------/
+bool rocket_destroyed[2] = [false, false];
+// /-----------------------------------------------------\
+// |               ФЛАГИ СБРОСА БОМБ                     |
+// \-----------------------------------------------------/
+bool bomb_launched[2] = [false, false];
+// /-----------------------------------------------------\
+// |          ФЛАГИ ДОСТИЖЕНИЯ БОМБАМИ ЗЕМЛИ             |
+// \-----------------------------------------------------/
+bool bomb_exploded[2] = [false, false];
+
+// Инициализация графиков
+chart.init("ЛР");
+graph3d.init("ЛР");
+
+// Задание внешнего вида точек графиков
+graph3d.addSeries("ПЛА", graph3d.Mesh.Sphere);
+
+graph3d.addSeries("БЛА1", graph3d.Mesh.Sphere);
+graph3d.addSeries("БЛА2", graph3d.Mesh.Sphere);
+graph3d.addSeries("БЛА3", graph3d.Mesh.Sphere);
+graph3d.addSeries("БЛА4", graph3d.Mesh.Sphere);
+
+graph3d.addSeries("LR1",graph3d.Mesh.Arrow);
+graph3d.addSeries("LR2",graph3d.Mesh.Arrow);
+
+graph3d.addSeries("R1",graph3d.Mesh.Pyramid);
+graph3d.addSeries("R2",graph3d.Mesh.Pyramid);
+
+graph3d.addSeries("B1",graph3d.Mesh.Pyramid);
+graph3d.addSeries("B2",graph3d.Mesh.Pyramid);
+
+graph3d.addSeries("Корабль1",graph3d.Mesh.Cube);
+graph3d.addSeries("Корабль2",graph3d.Mesh.Cube);
+
+graph3d.addSeries("Граница",graph3d.Mesh.Point);
+
+// Задания максимального
+// количества точек на графиках
+int point_count = 100;
+
+graph3d.setPointsCount("ПЛА", point_count);
+
+graph3d.setPointsCount("БЛА1", point_count);
+graph3d.setPointsCount("БЛА2", point_count);
+graph3d.setPointsCount("БЛА3", point_count);
+graph3d.setPointsCount("БЛА4", point_count);
+
+graph3d.setPointsCount("LR1", point_count);
+graph3d.setPointsCount("LR2", point_count);
+
+graph3d.setPointsCount("R1", point_count);
+graph3d.setPointsCount("R2", point_count);
+
+graph3d.setPointsCount("Корабль1", 1);
+graph3d.setPointsCount("Корабль2", 1);
+
+graph3d.setPointsCount("Граница", 2);
+
+// Установка границ для
+// пресечения масштабирования
+// графика
+graph3d.addPoint( "Граница"
+                , -__radius
+                , 0.0
+                , -__radius
+                );
+graph3d.addPoint( "Граница"
+                , __radius
+                , 150.0
+                , __radius
+                );
+
+// Определение функции обратного вызова (callback)
+// для отображения результатов моделирования
+void onShow()
+{
+    // Ускорения ведомых
+    //for (int i = 0; i < 4; ++i)
+    //sys.print("i:" + i + " ::" + debug_accel[i]);
+
+    // Отображение траектории ведомых БЛА
+    for (int i = 0; i < 4; ++i)
+    {
+        graph3d.addPoint( "БЛА" + (i + 1)
+                        , la_ctrl[i].la.y1
+                        , la_ctrl[i].la.y2
+                        , la_ctrl[i].la.y3
+                        );
+    }
+    // Отображение траектории ПЛА
+    graph3d.addPoint( "ПЛА"
+                    , la_main_ctrl.la.y1
+                    , la_main_ctrl.la.y2
+                    , la_main_ctrl.la.y3
+                    );
+
+    // Если начальный облёт не закончен,
+    // то выйти из функции
+    if (circle_route_enabled) return;
+
+    for (int i = 0; i < 2; ++i)
+    {
+        // Если бомба запущена, но не достигла земли,
+        // то отобразить её траекторию
+        if (bomb_launched[i] && !bomb_exploded[i])
+        {
+            graph3d.addPoint( "B" + (i + 1)
+                            , bombs[i].y1
+                            , bombs[i].y2
+                            , bombs[i].y3
+                            );
+        }
+
+        // Если ракета не сбита
+        if (!rocket_destroyed[i])
+        {
+            // Отобразить траекторию ракеты
+            graph3d.addPoint("R" + (i + 1)
+                            , rocket_ctrl[i].la.y1
+                            , rocket_ctrl[i].la.y2
+                            , rocket_ctrl[i].la.y3
+                            );
+
+            // Если выпускаемая ракета выпущена,
+            // то отобразить её траекторию
+            if (la_rocket_ctrl[i].mode !=
+                la_rocket_ctrl[i].MODE_MANUAL)
+            {
+                graph3d.addPoint( "LR" + (i + 1)
+                                , la_rocket_ctrl[i].la.y1
+                                , la_rocket_ctrl[i].la.y2
+                                , la_rocket_ctrl[i].la.y3
+                                );
+            }
+        }
+    }
+
+    // Нужно, чтобы ПЛА оставался выделенным
+    graph3d.addPoint( "ПЛА"
+                    , la_main_ctrl.la.y1
+                    , la_main_ctrl.la.y2
+                    , la_main_ctrl.la.y3
+                    );
+}
+
+// Функция обработки событий Системы управления
+void resolveControlEvents(Control ctrl)
+{
+    // Вызов итерации системы управления
+    ctrl.onIteration();
+
+    // Обработка события выхода на полёт по маршруту
+    if (ctrl.events[ctrl.EVENT_OUT_PPM])
+    {
+        sys.print( ctrl.la_name + ": Выход на ППМ, время: "
+                    + scene.t() + " c" );
+    }
+    // Обработка события посадки
+    if (ctrl.events[ctrl.EVENT_LANDED])
+    {
+        sys.print( ctrl.la_name + ": Аппарат достиг земли, время: "
+                    + scene.t() + " c" );
+        // Завершение симуляции
+        scene.setTk(scene.t());
+        graph3d.addPoint( ctrl.la_name
+                        , ctrl.la.y1
+                        , ctrl.la.y2
+                        , ctrl.la.y3
+                        );
+    }
+    // Обработка события прохода точки маршрута
+    if (ctrl.events[ctrl.EVENT_POINT_PASSED])
+    {
+        sys.print(ctrl.la_name + ": Точка "
+                    + (ctrl.MODE_PPM_point_index - 1)
+                    + " достигнута, время: " + scene.t() + " c" );
+    }
+    // Обработка события прохода последней точки маршрута
+    if (ctrl.events[ctrl.EVENT_TARGET_PASSED])
+    {
+        sys.print(ctrl.la_name + ": Цель достигнута, время: "
+                    + scene.t() + " c" );
+    }
+    // Обработка события провала ухода от цели
+    if (ctrl.events[ctrl.EVENT_AVOID_FAILED])
+    {
+        sys.print(ctrl.la_name + ": Не удалось избежать цели");
+    }
+    // Обработка события завершения взлёта
+    if (ctrl.events[ctrl.EVENT_LAUNCH_FINISHED])
+    {
+        sys.print(ctrl.la_name + ": Взлёт завершён");
+    }
+}
+
+// Функция запуска ракеты
+void launchRocket(LA la, LA rocket)
+{
+
+    // Начальное положение ракеты
+    // соответствует положению аппарата,
+    // который ракету запускает
+    rocket.y1 = la.y1;
+    rocket.y2 = la.y2;
+    rocket.y3 = la.y3;
+
+    // Начальная скорость ракеты
+    // соответствует удвоенной
+    // (возможно стоит уточнить)
+    // скорости аппарата,
+    // который ракету запускает
+    rocket.y4 = la.y4 * 2;
+    rocket.y5 = la.y5 * 2;
+    rocket.y6 = la.y6 * 2;
+
+    // Добавление ракеты на сцену
+    scene.add(rocket);
+}
+
+// Функция запуска бомбы
+void launchBomb(LA la, LA bomb)
+{
+    // Начальное положение бомбы
+    // соответствует положению аппарата,
+    // который бомбу сбрасывает
+    bomb.y1 = la.y1;
+    bomb.y2 = la.y2;
+    bomb.y3 = la.y3;
+
+    // Начальная скорость бомбы
+    // соответствует скорости аппарата,
+    // который бомбу сбрасывает
+    bomb.y4 = la.y4;
+    bomb.y5 = la.y5;
+    bomb.y6 = la.y6;
+
+    // Добавление объекта бомбы на сцену
+    scene.add(bomb);
+}
+
+// Функция итерации основного сценария
+void onIteration()
+{
+    // Положение ведомых рассчитывается
+    // относительно ведущего
+    float x_base = la_main_ctrl.la.y1;
+    float z_base = la_main_ctrl.la.y3;
+
+    // Курс ведомых определяется
+    // курсом ведущего
+    float psi_base = la_main_ctrl.la.psi;
+    // Пары точек для задания линий,
+    // вдоль которых должны двигаться ведомые
+    Target trgt_follow[8] = [
+        {
+            x : x_base
+                + math.cos(psi_base + math.atan(-4500.0/3000.0))
+                    * s.vector2dLength(-4500.0, 3000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(-4500.0/3000.0))
+                    * s.vector2dLength(-4500.0, 3000.0)
+            , v : la_main_ctrl.target.v
+        }
+        , {
+            x : x_base
+                + math.cos(psi_base + math.atan(-4500.0/10000.0))
+                    * s.vector2dLength(-4500.0, 10000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(-4500.0/10000.0))
+                    * s.vector2dLength(-4500.0, 10000.0)
+            , v : la_main_ctrl.target.v
+        }
+        , {
+            x : x_base
+                + math.cos(psi_base + math.atan(-1500.0/3000.0))
+                    * s.vector2dLength(-1500.0, 3000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(-1500.0/3000.0))
+                    * s.vector2dLength(-1500.0, 3000.0)
+            , v : la_main_ctrl.target.v
+        }
+        , {
+            x : x_base
+                + math.cos(psi_base + math.atan(-1500.0/10000.0))
+                    * s.vector2dLength(-1500.0, 10000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(-1500.0/10000.0))
+                    * s.vector2dLength(-1500.0, 10000.0)
+            , v : la_main_ctrl.target.v
+        }
+        , {
+            x : x_base
+                + math.cos(psi_base + math.atan(1500.0/3000.0))
+                    * s.vector2dLength(1500.0, 3000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(1500.0/3000.0))
+                    * s.vector2dLength(1500.0, 3000.0)
+            , v : la_main_ctrl.target.v
+        }
+        , {
+            x : x_base
+                + math.cos(psi_base + math.atan(1500.0/10000.0))
+                    * s.vector2dLength(1500.0, 10000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(1500.0/10000.0))
+                    * s.vector2dLength(1500.0, 10000.0)
+            , v : la_main_ctrl.target.v
+        }
+        , {
+            x : x_base
+                + math.cos(psi_base + math.atan(4500.0/3000.0))
+                    * s.vector2dLength(4500.0, 3000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(4500.0/3000.0))
+                    * s.vector2dLength(4500.0, 3000.0)
+            , v : la_main_ctrl.target.v
+        }
+        , {
+            x : x_base
+                + math.cos(psi_base + math.atan(4500.0/10000.0))
+                    * s.vector2dLength(4500.0, 10000.0)
+            , height : la_main_ctrl.la.y2
+            , z : z_base
+                + math.sin(psi_base + math.atan(4500.0/10000.0))
+                    * s.vector2dLength(4500.0, 10000.0)
+            , v : la_main_ctrl.target.v
+        }
+    ];
+
+    // Боевые цели каждого ведомого
+    Target trgt_attack[4] = [
+        { x : rocket_ctrl[0].la.y1
+        , height : rocket_ctrl[0].la.y2
+        , z : rocket_ctrl[0].la.y3
+        , v : rocket_ctrl[0].la.v_z + 50.0
+        }
+        , { x : rocket_ctrl[1].la.y1
+          , height : rocket_ctrl[1].la.y2
+          , z : rocket_ctrl[1].la.y3
+          , v : rocket_ctrl[1].la.v_z + 50.0
+          }
+        , { x : ship[0].y1
+          , height : 100.0
+          , z : ship[0].y3
+          , v : 200.0
+          }
+        , { x : ship[1].y1
+          , height : 100.0
+          , z : ship[1].y3
+          , v : 200.0
+          }
+    ];
+
+    // Регулировка скорости ведомых
+    // для удержания строя
+    for (int i = 0; i < 4; ++i)
+    {
+        // Расстояние от ведомого до
+        // точки, которую надо занять
+        float distance = s.vector2dLength(
+                            la_ctrl[i].la.y1 - trgt_follow[2 * i].x
+                            , la_ctrl[i].la.y3 - trgt_follow[2 * i].z
+                            );
+        // Отклонение курса ведомого
+        // относительно курса ведущего
+        float delta_psi = math.abs(la_main_ctrl.la.psi
+                                    - la_ctrl[i].la.psi);
+        if (math.const_pi() < delta_psi)
+        {
+            delta_psi = 2 * math.const_pi() - delta_psi;
+        }
+
+        // Вектор, который определяет линию ведомого
+        float a[2] = [
+            trgt_follow[2 * i + 1].x - trgt_follow[2 * i].x
+            , trgt_follow[2 * i + 1].z - trgt_follow[2 * i].z
+        ];
+        // Вектор от точки, которую надо занять,
+        // к ведомому
+        float b[2] = [
+            la_ctrl[i].la.y1 - trgt_follow[2 * i].x
+            , la_ctrl[i].la.y3 - trgt_follow[2 * i].z
+        ];
+
+        // Коэффициент -1.0..1.0 определяющий знак
+        // и модуль ускорения.
+        // Если ведомый сближается с линией,
+        // то ускорение уменьшается.
+        // Если ведомый направлен не в обратном
+        // направлении, то знак положительный.
+        float k_by_fly_dir = (0.5 * math.const_pi() - delta_psi)
+                                / (0.5 * math.const_pi());
+        // Коэффициент по проекции расстояния до точки,
+        // которую надо занять, на линию, вдоль которой
+        // следует двигаться.
+        // Если ведомый направлен в ту же сторону,
+        // что и вектор линии,
+        //
+        // то чем больше отстаёт ведомый,
+        // тем больше коэффициент с положительным знаком;
+        // чем больше обгоняет ведомый,
+        // тем больше коэффициент с отрицательным знаком
+        float k_by_pos = - (a[0]*b[0] + a[1]*b[1])
+                           / (s.excludeZero(
+                                s.vector2dLength(a[0], a[1])
+                                * s.vector2dLength(b[0], b[1]))
+                             );
+        // Коэффициент по расстоянию до точки,
+        // которую надо занять,
+        // в горизонтальной плоскости
+        float k_by_distance = 0.1;
+        // Расчёт ускорения (скорости, которую нужно прибавить)
+        float acceleration = k_by_fly_dir
+                                * k_by_pos
+                                * k_by_distance
+                                * distance;
+        // Ограничения ускорения
+        acceleration = s.limit(acceleration, -50.0, 50.0);
+        // Установка ускорения ведомому
+        trgt_follow[2* i + 1].v += acceleration;
+        // Для отладки
+        debug_accel[i] = acceleration;
+    }
+
+    // После взлёта ведомый следует по маршруту
+    // начального кругового облёта
+    if (la_main_state == 0
+        && la_main_ctrl.mode == la_main_ctrl.MODE_IDLE)
+    {
+        la_main_ctrl.mode = la_main_ctrl.MODE_PPM;
+        ++la_main_state;
+    }
+    // После начального кругового облёта
+    // ведомый следует по маршруту подлёта
+    // к месту боевых действий.
+    //
+    // Устанавливаются новые границы сцены.
+    // Отображаются стационарные объекты.
+    else if (la_main_state == 1
+            && la_main_ctrl.mode == la_main_ctrl.MODE_IDLE)
+    {
+        la_main_ctrl.MODE_PPM_route = la_main_ctrl_prepare_route;
+        la_main_ctrl.mode = la_main_ctrl.MODE_PPM;
+        ++la_main_state;
+
+        graph3d.addPoint( "Граница"
+                        , 0.0
+                        , 0.0
+                        , 0.0
+                        );
+        graph3d.addPoint( "Граница"
+                        , __radius + 100000.0
+                        , 150.0
+                        , __radius + 100000.0
+                        );
+
+        for (int i = 0; i < 2; ++i)
+        {
+            graph3d.addPoint("Корабль" + (i + 1)
+                            , ship[i].y1
+                            , ship[i].y2
+                            , ship[i].y3
+                            );
+            scene.add(rocket_ctrl[i].la);
+        }
+        circle_route_enabled = false;
+    }
+    // После подлёта к месту боевых действий
+    // ведомые выходят из роя и начинают
+    // уничтожение личных боевых целей.
+    // Ведомый отправляется к своей последней точке
+    // (смотрите начало файла).
+    else if (la_main_state == 2
+            && la_main_ctrl.mode == la_main_ctrl.MODE_IDLE)
+    {
+        free_drones = true;
+
+        la_main_ctrl.mode = la_main_ctrl.MODE_ATTACK_TARGET;
+        la_main_ctrl.target = la_main_finish_target;
+        ++la_main_state;
+    }
+
+    // Основной сценарий ведомых
+    for (int i = 0; i < 4; ++i)
+    {
+        // Используется ручное управление,
+        // для эмуляции сценария роя,
+        // не предусмотренного в стандартной СУ.
+        // Первый запуск с установкой режимов
+        // управления по каналам.
+        if (la_states[i] == 0
+            && la_ctrl[i].mode == la_ctrl[i].MODE_IDLE)
+        {
+            la_ctrl[i].mode = la_ctrl[i].MODE_MANUAL;
+            la_ctrl[i].height_mode = la_ctrl[i].HM_CHANGE_ECHELON;
+            la_ctrl[i].psi_mode = la_ctrl[i].PM_FOLLOW_LINE;
+
+            la_ctrl[i].PM_FOLLOW_LINE_base_point = trgt_follow[2 * i];
+            la_ctrl[i].target = trgt_follow[2 * i + 1];
+            la_ctrl[i].iterate();
+
+            ++la_states[i];
+        }
+        // Используется ручное управление,
+        // для эмуляции сценария роя,
+        // не предусмотренного в стандартной СУ.
+        // Обновление маршрутов роя
+        // и переход к выполнению личных боевых задач
+        else if (la_states[i] == 1)
+        {
+            la_ctrl[i].PM_FOLLOW_LINE_base_point = trgt_follow[2 * i];
+            la_ctrl[i].target = trgt_follow[2 * i + 1];
+            la_ctrl[i].iterate();
+
+            if (free_drones)
+            {
+                la_ctrl[i].mode = la_ctrl[i].MODE_ATTACK_TARGET;
+                la_ctrl[i].target = trgt_attack[i];
+                ++la_states[i];
+            }
+        }
+        // Личные боевые задачи БЛА
+        else if (la_states[i] == 2)
+        {
+            // Настройка сценария атаки цели
+            la_ctrl[i].mode = la_ctrl[i].MODE_ATTACK_TARGET;
+            // Установка целей
+            la_ctrl[i].target = trgt_attack[i];
+
+            // БЛА1 и БЛА2 пытаются сбить выпускаемой ракетой
+            // ракету, которая уже летит
+            if (i < 2)
+            {
+                // Запуск выпускаемой ракеты происходит тогда,
+                // когда БЛА сблизится с ракетой.
+                // После пуска выпускаемой ракеты
+                // БЛА летит в последнюю точку ведомого
+                // (смотрите начало файла)
+                if (s.vector3dLength(
+                        la_ctrl[i].la.y1 - rocket_ctrl[i].la.y1
+                        , la_ctrl[i].la.y2 - rocket_ctrl[i].la.y2
+                        , la_ctrl[i].la.y3 - rocket_ctrl[i].la.y3
+                        ) < 2000.0)
+                {
+                    la_rocket_ctrl[i].mode =
+                        la_rocket_ctrl[i].MODE_ATTACK_TARGET;
+                    launchRocket(la_ctrl[i].la, la_rocket_ctrl[i].la);
+                    sys.print("LR" + (i + 1) + " запущена");
+
+                    la_ctrl[i].target = la_main_finish_target;
+                    ++la_states[i];
+                }
+            }
+            // БЛА1 и БЛА2 сбрасывают бомбы на стационарные объекты.
+            //
+            // Сброс бомб происходит тогда,
+            // когда БЛА сблизится со стационарным объектом.
+            // После сброса бомбы
+            // БЛА летит в последнюю точку ведомого
+            // (смотрите начало файла).
+            else if (
+                s.vector2dLength( la_ctrl[i].la.y1 - ship[i - 2].y1
+                                , la_ctrl[i].la.y3 - ship[i - 2].y3
+                                ) < 800.0
+            ) {
+                launchBomb(la_ctrl[i].la, bombs[i - 2]);
+                bomb_launched[i - 2] = true;
+
+                la_ctrl[i].target = la_main_finish_target;
+                ++la_states[i];
+            }
+        }
+    }
+
+    // Если <выпущенная ракета X> выпущена и
+    // <ракета X> не сбита, и
+    // расстояние между ними меньше 100 метров,
+    // то
+    // <ракета X> сбита <выпущенной ракетой X> и
+    // убрать со сцены обе ракеты.
+    for (int i = 0; i < 2; ++i)
+    {
+        la_rocket_ctrl[i].target = trgt_attack[i];
+        if (la_rocket_ctrl[i].mode != la_rocket_ctrl[i].MODE_MANUAL
+            && !rocket_destroyed[i]
+            && s.vector3dLength(
+                    la_rocket_ctrl[i].la.y1 - rocket_ctrl[i].la.y1
+                    , la_rocket_ctrl[i].la.y2 - rocket_ctrl[i].la.y2
+                    , la_rocket_ctrl[i].la.y3 - rocket_ctrl[i].la.y3
+                    ) < 100.0
+            )
+        {
+            scene.remove(rocket_ctrl[i].la);
+            scene.remove(la_rocket_ctrl[i].la);
+            rocket_destroyed[i] = true;
+            rocket_ctrl[i].mode = rocket_ctrl[i].MODE_MANUAL;
+            la_rocket_ctrl[i].mode = la_rocket_ctrl[i].MODE_MANUAL;
+            sys.print("R" + (i + 1) + " сбита LR" + (i + 1));
+        }
+    }
+
+    // Работа Системы управления ведущего
+    // и обработка управляющих событий
+    resolveControlEvents(la_main_ctrl);
+    // Работа Системы управления ведомых
+    // и обработка управляющих событий
+    for (int i = 0; i < 4; ++i)
+    {
+        resolveControlEvents(la_ctrl[i]);
+    }
+    // Работа Системы управления ракет
+    // и обработка управляющих событий
+    for (int i = 0; i < 2; ++i)
+    {
+        resolveControlEvents(rocket_ctrl[i]);
+        resolveControlEvents(la_rocket_ctrl[i]);
+    }
+
+    // Если бомба в воздухе,
+    // но уже достигла земли,
+    // то убрать ракету со сцены;
+    // иначе происходит симуляция
+    // сопротивления встречного потока
+    // (сопротивление воздуха тормозит
+    // движение бомбы вперёд)
+    for (int i = 0; i < 2; ++i)
+    {
+        if (bomb_launched[i] && !bomb_exploded[i])
+        {
+            if (bombs[i].y2 <= 0.0)
+            {
+                scene.remove(bombs[i]);
+                bomb_exploded[i] = true;
+                sys.print("B" + (i + 1) + " достигла земли");
+            }
+            float Kxb = -0.3;
+            float bomb_mass = 100.0;
+            float g = 9.81;
+            bombs[i].nxt = Kxb * ( bombs[i].y4^2
+                                + bombs[i].y5^2
+                                + bombs[i].y6^2
+                                ) / (bomb_mass*g);
+            bombs[i].nxt = s.limit( bombs[i].nxt
+                                 , bombs[i].nxt_min
+                                 , bombs[i].nxt_max
+                                 );
+        }
+    }
+
+    // Если хотя бы одна бомба в воздухе,
+    // уменьшить шаг моделирования
+    // для более наглядной траектории бомб
+    if ((bomb_launched[0] && !bomb_exploded[0])
+            || (bomb_launched[1] && !bomb_exploded[1]))
+    {
+        scene.setDt(0.01);
+    }
+    else
+    {
+        scene.setDt(0.1);
+    }
+}
+
+// Инициализация сцены
+//.. Установка колбэка на каждые 30 итераций
+//.. Нужен для отображения графиков
+scene.setIterationCallback(onShow, 30);
+//.. Установка колбэка на каждую итерацию
+//.. Нужен для работы систем управления
+scene.setEachIterationCallback(onIteration);
+//.. Начальное время моделирования в секундах
+scene.setT(0.0);
+//.. Шаг моделирования в секундах
+scene.setDt(0.1);
+//.. Конечное время моделирования в секундах
+scene.setTk(3000.0);
+//.. Можно включить режим реального времени.
+//.. Если включён, то итерации будут происходить
+//.. НЕ(!) чаще, чем определено шагом моделирования
+scene.setRealtimeModeEnabled(false);
+// Добавление объектов на сцену
+scene.add(la_main_ctrl.la);
+for (int i = 0; i < 4; ++i)
+{
+    scene.add(la_ctrl[i].la);
+}
+// Запуск моделирования
+scene.start();
+

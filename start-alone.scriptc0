@@ -1,0 +1,128 @@
+﻿import "механоид/динамика.diff" type Динамика;
+import "механоид/параметры_системы.scriptc0" type Параметры параметры;
+import "механоид/загрузка.scriptc0" type Загрузка;
+import "механоид/позиция.scriptc0" type Позиция;
+import "механоид/враги.scriptc0" type Враги;
+
+Динамика д = {
+    g : 9.81,
+    y1 : 90.0,           y2 : 1.0,     y3 : 0.0,
+    y4 : 0.0000001,       y5 : 0.0,               y6 : 0.0,
+
+    m : 300,
+    Kx : 0.7,
+    
+    nyt : 1.0,
+
+    y2_z : 0.0,
+    Kh : 1.0,
+    Kny : 1.0,
+
+    Kv : 0.04,          V_z : параметры.скорость_ходьбы,
+
+    y5_z_min : -2.5,   y5_z_max : 2.5,
+    nyt_min : -1.0,      nyt_max : 5.0,
+    nxt_min : -0.5,     nxt_max : 0.5,
+
+    xc : параметры.флаг.x,        zc : параметры.флаг.z,
+    Kom : 0.5,          Knzt : 10.5,
+    nzt_min : -2.0,     nzt_max : 2.0,
+};
+
+//auto враги = {};
+
+float радиус_зрения = 50;
+float задержка_в_приседании = 2;
+float время_приседания = scene.tk();
+
+bool out = false;
+
+bool режим_приседания = false;
+
+Загрузка экипировка [10];
+
+Загрузка э_пушка = {тип : 1, имя : "пушка", масса : 20000.0, повреждение : 100.0 };
+Загрузка э_зрение = {тип : 2, имя : "зрение", масса : 1000.0, повреждение : 100.0 };
+
+// Поле сцены
+auto поле = [   { x: 100.0, y : 0.0, z : 100.0 },
+                { x: -100.0, y : 0.0, z : 100.0 },
+                { x: -100.0, y : 0.0, z : -100.0 },
+                { x: 100.0, y : 0.0, z : -100.0 },
+            ];
+// Инициализация графиков
+chart.init("Сцена");
+graph3d.init("Сцена");
+graph3d.addSeries("Ф", graph3d.Mesh.Cone);
+graph3d.addPoint("Ф", 
+                 параметры.флаг.x, 
+                 параметры.флаг.y, 
+                 параметры.флаг.z);
+graph3d.addSeries("П", graph3d.Mesh.Cube);
+graph3d.addPoint("П", поле[0].x, поле[0].y, поле[0].z);
+graph3d.addPoint("П", поле[1].x, поле[1].y, поле[1].z);
+graph3d.addPoint("П", поле[2].x, поле[2].y, поле[2].z);
+graph3d.addPoint("П", поле[3].x, поле[3].y, поле[3].z);
+
+graph3d.addSeries("М"+0, graph3d.Mesh.Sphere);
+graph3d.addSeries("М"+1, graph3d.Mesh.Cylinder);
+graph3d.addSeries("М"+2, graph3d.Mesh.Cube);
+graph3d.addSeries("М"+3, graph3d.Mesh.Minimal);
+//for(int i=0; i < MechQuantity; ++i) {
+//    graph3d.setPointsCount("М"+i,1);
+//}
+// Определение функции обратного вызова (callback) для отображения результатов моделирования
+void onShow()
+{
+    chart.addPoint( "0", scene.t(), 0.0);
+//    chart.addPoint( "nxt", scene.t(), м[i].д.nxt);
+//    chart.addPoint( "P", scene.t(), д.P);
+    chart.addPoint( "V", scene.t(), д.V);
+    chart.addPoint( "Vg", scene.t(), д.Vg);
+//    chart.addPoint( "y5"+i, scene.t(), м[i].д.y5);
+//    chart.addPoint( "y5_z", scene.t(), д.y5_z);
+//    chart.addPoint( "y2", scene.t(), д.y2);
+//    chart.addPoint( "X", scene.t(), д.X);
+//    chart.addPoint( "R", scene.t(),
+//                   math.sqrt((параметры.флаг.x-д.y1)^2 
+//                    + (параметры.флаг.z-д.y3)^2));
+    graph3d.addPoint("М", д.y1, д.y2, д.y3);
+}
+
+void onIteration()
+{
+        if (math.sqrt((параметры.флаг.x-д.y1)^2 + (параметры.флаг.z-д.y3)^2) < 2.0)         
+        {
+            д.V_z = 0.00000001;
+//            sys.print("Механоид захватил флаг! Время: "+scene.t()+" c" );
+//            scene.setTk(scene.t());
+//            return;
+        }
+        
+//        Враги в;
+//        
+//        for(int j=0; j < MechQuantity; ++j)
+//            if (j != i)
+//                if (math.sqrt((м[j].д.y1-м[i].д.y1)^2 + (м[j].д.y3-м[i].д.y3)^2)
+//                    < м[i].радиус_зрения) {
+//                    в.поз[j].задана = true;
+//                    в.поз[j].x = м[j].д.y1;
+//                    в.поз[j].y = м[j].д.y2;
+//                    в.поз[j].z = м[j].д.y3;
+//                }
+//        
+//        м[i].control(в);
+}
+// Инициализация сцены
+scene.setIterationCallback(onShow, 10);
+scene.setEachIterationCallback(onIteration);
+scene.setRealtimeModeEnabled(true); 
+scene.setT(0.0);
+scene.setDt(0.01);
+scene.setTk(3000.0);
+// Добавление объектов на сцену
+//for(int i=0; i < MechQuantity; ++i)
+    scene.add(д);
+// Запуск моделирования
+scene.start();
+
