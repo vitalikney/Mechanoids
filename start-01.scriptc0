@@ -54,35 +54,36 @@ int количество_захваченных_флагов = 0;
 
 // Инициализация графиков
 chart.init("Сцена");
-graph3d.init("Сцена");
-graph3d.addSeries("Ф", graph3d.Mesh.Cone);
-graph3d.addPoint("Ф", 
+mechanoid.init("Сцена");
+mechanoid.addSeries("Ф", mechanoid.Mesh.Cone);
+mechanoid.addPoint("Ф", 
                  образец.параметры.флаг[0].x, 
                  образец.параметры.флаг[0].y, 
                  образец.параметры.флаг[0].z);
-                 
-//graph3d.addPoint("Ф", 
-  //        образец.параметры.флаг2.x, 
-    //             образец.параметры.флаг2.y, 
-      //           образец.параметры.флаг2.z);
-graph3d.addSeries("П", graph3d.Mesh.Cube);
-graph3d.addPoint("П", поле[0].x, поле[0].y, поле[0].z);
-graph3d.addPoint("П", поле[1].x, поле[1].y, поле[1].z);
-graph3d.addPoint("П", поле[2].x, поле[2].y, поле[2].z);
-graph3d.addPoint("П", поле[3].x, поле[3].y, поле[3].z);
 
-graph3d.addSeries("М"+0, graph3d.Mesh.Cube);
-graph3d.addSeries("М"+1, graph3d.Mesh.Cylinder);
-graph3d.addSeries("М"+2, graph3d.Mesh.Sphere);
-graph3d.addSeries("М"+3, graph3d.Mesh.Minimal);
+/*                 
+mechanoid.addPoint("Ф", образец.параметры.флаг2.x, 
+                 образец.параметры.флаг2.y, 
+                 образец.параметры.флаг2.z);
+*/
+mechanoid.addSeries("П", mechanoid.Mesh.Cube);
+mechanoid.addPoint("П", поле[0].x, поле[0].y, поле[0].z);
+mechanoid.addPoint("П", поле[1].x, поле[1].y, поле[1].z);
+mechanoid.addPoint("П", поле[2].x, поле[2].y, поле[2].z);
+mechanoid.addPoint("П", поле[3].x, поле[3].y, поле[3].z);
+
+mechanoid.addSeries("М"+0, mechanoid.Mesh.Cube);
+mechanoid.addSeries("М"+1, mechanoid.Mesh.Cylinder);
+mechanoid.addSeries("М"+2, mechanoid.Mesh.Sphere);
+mechanoid.addSeries("М"+3, mechanoid.Mesh.Minimal);
 for(int i=0; i < количество_механоидов; ++i) {
-    graph3d.setPointsCount("М"+i,1);
+    mechanoid.setPointsCount("М"+i,1);
 }
 
 for(int i=0; i < количество_механоидов; ++i) {
    for(int j=0; j < 100; ++j) {
-    graph3d.addSeries("Ракета " + i + " " + j, graph3d.Mesh.Sphere);
-    graph3d.setPointsCount("Ракета " + i + " " + j, 1);
+    mechanoid.addSeries("Ракета " + i + " " + j, mechanoid.Mesh.Sphere);
+    mechanoid.setPointsCount("Ракета " + i + " " + j, 1);
     }
 }
 
@@ -142,7 +143,7 @@ void rocketHit(int cur) {
 void onShow()
 {
 //    chart.addPoint( "0", scene.t(), 0.0);
-//    graph3d.addPint oint("М"+1, м[1].д.y1, м[1].д.y2, м[1].д.y3);
+//    mechanoid.addPint oint("М"+1, м[1].д.y1, м[1].д.y2, м[1].д.y3);
     for(int i=0; i < количество_механоидов; ++i) {
 //        chart.addPoint( "nxt"+i, scene.t(), м[i].д.nxt);
         chart.addPoint( "P"+i, scene.t(), м[i].д.P);
@@ -153,12 +154,12 @@ void onShow()
 //        chart.addPoint( "R"+i, scene.t(),
 //                       math.sqrt((образец.параметры.флаг.x-м[i].д.y1)^2 
 //                        + (образец.параметры.флаг.z-м[i].д.y3)^2));
-        graph3d.addPoint("М"+i, м[i].д.y1, м[i].д.y2, м[i].д.y3);
+        mechanoid.addPoint("М"+i, м[i].д.y1, м[i].д.y2, м[i].д.y3);
         
         if (м[i].пушка.количество_зарядов != м[i].пушка.макс_колво_зарядов) {
             for(int j = м[i].пушка.макс_колво_зарядов - 1; j >= м[i].пушка.количество_зарядов; --j) {
                 if (м[i].пушка.обойма[j].отобржать == true) {
-                    graph3d.addPoint("Ракета " + i + " " + j, м[i].пушка.обойма[j].ракета.y1, м[i].пушка.обойма[j].ракета.y2, м[i].пушка.обойма[j].ракета.y3);
+                    mechanoid.addPoint("Ракета " + i + " " + j, м[i].пушка.обойма[j].ракета.y1, м[i].пушка.обойма[j].ракета.y2, м[i].пушка.обойма[j].ракета.y3);
                     rocketOnScene(i, j);
                 }
             }
@@ -198,53 +199,53 @@ void vision(int cur)
 // Движение, когда у механоида нет цели
 void default_movement(int i,float длина_стороны, bool reset)
 {
-       if(reset) {
+    if(reset) {
+        м[i].вершина.x = м[i].д.y1;
+        м[i].вершина.z = м[i].д.y3;
+        м[i].состояние = 0;
+    }
+
+    if(м[i].состояние == 0) {
+        if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
+        {
+            м[i].состояние = 1;
             м[i].вершина.x = м[i].д.y1;
             м[i].вершина.z = м[i].д.y3;
-            м[i].состояние = 0;
-       }
-
-       if(м[i].состояние == 0) {
-            if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
-            {
-                м[i].состояние = 1;
-                м[i].вершина.x = м[i].д.y1;
-                м[i].вершина.z = м[i].д.y3;
-            }
-            м[i].д.xc = м[i].вершина.x + длина_стороны;
-            м[i].д.zc = м[i].вершина.z;
-       }
-       if(м[i].состояние == 1) {
-            if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
-            {
-                м[i].состояние = 2;
-                м[i].вершина.x = м[i].д.y1;
-                м[i].вершина.z = м[i].д.y3;
-            }
-            м[i].д.xc = м[i].вершина.x;
-            м[i].д.zc = м[i].вершина.z - длина_стороны;
-       }
+        }
+        м[i].д.xc = м[i].вершина.x + длина_стороны;
+        м[i].д.zc = м[i].вершина.z;
+    }
+    if(м[i].состояние == 1) {
+        if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
+        {
+            м[i].состояние = 2;
+            м[i].вершина.x = м[i].д.y1;
+            м[i].вершина.z = м[i].д.y3;
+        }
+        м[i].д.xc = м[i].вершина.x;
+        м[i].д.zc = м[i].вершина.z - длина_стороны;
+    }
        
-       if(м[i].состояние == 2) {
-            if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
-            {
-                м[i].состояние = 3;
-                м[i].вершина.x = м[i].д.y1;
-                м[i].вершина.z = м[i].д.y3;
-            }
-            м[i].д.xc = м[i].вершина.x - длина_стороны;
-            м[i].д.zc = м[i].вершина.z;
-       }
-       if(м[i].состояние == 3) {
-            if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
-            {
-                м[i].состояние = 0;
-                м[i].вершина.x = м[i].д.y1;
-                м[i].вершина.z = м[i].д.y3;
-            }
-            м[i].д.xc = м[i].вершина.x;
-            м[i].д.zc = м[i].вершина.z + длина_стороны;
-       }
+    if(м[i].состояние == 2) {
+        if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
+        {
+            м[i].состояние = 3;
+            м[i].вершина.x = м[i].д.y1;
+            м[i].вершина.z = м[i].д.y3;
+        }
+        м[i].д.xc = м[i].вершина.x - длина_стороны;
+        м[i].д.zc = м[i].вершина.z;
+    }
+    if(м[i].состояние == 3) {
+        if (math.sqrt((м[i].вершина.x-м[i].д.y1)^2 + (м[i].вершина.z-м[i].д.y3)^2) >= длина_стороны)
+        {
+            м[i].состояние = 0;
+            м[i].вершина.x = м[i].д.y1;
+            м[i].вершина.z = м[i].д.y3;
+        }
+        м[i].д.xc = м[i].вершина.x;
+        м[i].д.zc = м[i].вершина.z + длина_стороны;
+    }
 }
 
 void onIteration() {
@@ -258,7 +259,7 @@ void onIteration() {
             м[j].д.xc = образец.параметры.флаг[1].x;
             м[j].д.zc = образец.параметры.флаг[1].z;
             }
-            graph3d.addPoint("Ф", 
+            mechanoid.addPoint("Ф", 
                    образец.параметры.флаг[1].x,
                    образец.параметры.флаг[1].y, 
                    образец.параметры.флаг[1].z);
@@ -335,8 +336,7 @@ scene.setT(0.0);
 scene.setDt(0.01);
 scene.setTk(3000.0);
 // Добавление объектов на сцену
-for(int i=0; i < количество_механоидов; ++i)
-{    
+for(int i=0; i < количество_механоидов; ++i) {    
     scene.add(м[i].д);
     // scene.add(rockets[i].ракета);
 }
