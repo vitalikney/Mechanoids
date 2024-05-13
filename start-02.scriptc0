@@ -269,7 +269,7 @@ void default_movement(int i, float длина_стороны, bool reset) {
     }
 }
 
-// Движение, когда у механоида нет цели
+// Движение, когда у механоида есть цель
 void target_movement(int i,  float x, float z) {
     м[i].д.xc = x;
     м[i].д.zc = z;
