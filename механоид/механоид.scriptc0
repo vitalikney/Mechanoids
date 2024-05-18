@@ -1,7 +1,6 @@
 ﻿import "динамика.diff" type Динамика;
 import "параметры_системы.scriptc0" type Параметры параметры;
 import "загрузка.scriptc0" type Загрузка;
-import "позиция.scriptc0" type Позиция;
 import "враги.scriptc0" type Враги;
 import "пушка.scriptc0" type Пушка;
 
@@ -31,6 +30,7 @@ import "пушка.scriptc0" type Пушка;
 };
 
 int здоровье = 100;
+bool жив = true;
 
 //auto враги = {};
 
