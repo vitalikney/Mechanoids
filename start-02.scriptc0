@@ -88,7 +88,6 @@ void rocketOnScene(int i, int j) {
        ((м[i].пушка.обойма[j].ракета.y3 > -math.toFloat(параметры.высота_поля)) && (м[i].пушка.обойма[j].ракета.y3 < math.toFloat(параметры.высота_поля)))))
        {}
     else {
-        mechanoid.sendLogMsg("Удаление ракеты");
         м[i].пушка.обойма[j].отобржать = false;
         scene.remove(м[i].пушка.обойма[j].ракета);
         mechanoid.removePoint("Ракета " + i + " " + j);
@@ -144,7 +143,7 @@ void onShow() {
             for(int j = м[i].пушка.макс_колво_зарядов - 1; j >= м[i].пушка.количество_зарядов; --j) {
                 if (м[i].пушка.обойма[j].отобржать == true) {
                     mechanoid.addPoint("Ракета " + i + " " + j, м[i].пушка.обойма[j].ракета.y1, м[i].пушка.обойма[j].ракета.y3);
-                    // rocketOnScene(i, j);
+                    rocketOnScene(i, j);
                 }
             }
         }
