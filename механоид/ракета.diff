@@ -1,0 +1,43 @@
+﻿// Используем вспомогательный модуль для S-функции
+import "support.scriptc0" type Support s;
+
+// Движение центра масс
+// Кинематика
+y1' = y4;
+y2' = y5;
+y3' = y6;
+// Динамика
+y4' = g*y4 / sqrt(y4^2+y5^2+y6^2) * (nxt - y5 / sqrt(y4^2+y6^2) * nyt)
+    - g*y6 / sqrt(y4^2+y6^2) * nzt;
+y5' = g*y5 / sqrt(y4^2+y5^2+y6^2) * nxt
+    + g * sqrt(y4^2+y6^2) / sqrt(y4^2+y5^2+y6^2) * nyt
+    - g;
+y6' = g*y6 / sqrt(y4^2+y5^2+y6^2) * (nxt - y5 / sqrt(y4^2+y6^2) * nyt)
+    + g*y4 / sqrt(y4^2+y6^2) * nzt;
+
+// Система управления
+Vg = sqrt(y4^2+y6^2) + 0.0000001;
+y5_z = Kh * (y2_z - y2);
+y5_z = s.limit(y5_z, y5_z_min, y5_z_max);
+V = sqrt(y4^2+y5^2+y6^2);
+nxt = Kv * (V_z - Vg);
+nxt = s.limit(nxt, nxt_min, nxt_max);
+nyt = 1 + Kny*(y5_z - y5);
+nyt = s.limit(nyt,nyt_min,nyt_max);
+Rg = sqrt((xc-y1)^2+(zc-y3)^2) + 0.0000001;
+SIPSI = (y4*(zc-y3)-y6*(xc-y1))/(Vg*Rg);
+COPSI = (y4*(xc-y1)+y6*(zc-y3))/(Vg*Rg);
+PSI = atan2(SIPSI,COPSI);
+OM = Kom*PSI;
+nzt = Knzt*OM;
+nzt = s.limit(nzt,nzt_min,nzt_max);
+
+// Управляющие воздействия через силы
+X = Kx*(y4^2 +y6^2);
+//nxt = (P-X)/(m*g);
+//nyt = Yv/(m*g);
+//nzt = Yg/(m*g);
+
+P = nxt * m*g - X;
+Yv = nyt * m*g;
+Yg = nzt * m*g;
