@@ -1,5 +1,4 @@
-﻿import "динамика.diff" type Динамика;
-import "ракета.scriptc0" type Ракета;
+﻿import "ракета.scriptc0" type Ракета;
 
 float скорострельность = 0;
 int количество_зарядов = 100;
