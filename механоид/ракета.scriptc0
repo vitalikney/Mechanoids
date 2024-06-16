@@ -26,5 +26,5 @@ import "параметры_системы.scriptc0" type Параметры па
     nzt_min : -2.0,     nzt_max : 2.0,
 };
 
-bool отобржать = true;
+bool отображать = true;
 int урон = 10;
