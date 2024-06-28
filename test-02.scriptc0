@@ -1,0 +1,5 @@
+﻿int a = 10;
+
+void function () {
+    sys.print("hello!");
+    }

@@ -1,2 +1,2 @@
-﻿int индекс = 0;
-string тип_элемента;
+﻿float x;
+float y;

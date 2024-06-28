@@ -1,0 +1,35 @@
+﻿import "test-02.scriptc0" type test T1;
+
+/*
+test T1;
+T1.h();
+
+void g(int i, bool t) {
+    sys.print("bye!! " + g.i + " " + g.t);
+}
+
+T1.h = g;
+
+T1.h(1, true);
+
+g.i = 10;
+
+void c(){
+    g(g.i, true);
+}
+
+c();
+
+sys.print(g.i);
+
+c();
+*/
+
+void mechanoid_init() {
+    a = a + 1;
+    sys.print(a);
+    mechanoid.init("-", 200, 100);
+}
+
+T1.function = mechanoid_init;
+T1.function();
