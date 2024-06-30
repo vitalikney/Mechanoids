@@ -14,7 +14,7 @@ int индексы_ближайших_флагов[];
 int количество_зарядов;
 
 // Управление Механоидом 0
-void mechanoid_control() {
+void mechanoidControl() {
     // rocketHit(i);
     // vision(i);
     // flag_catch(i);
@@ -26,9 +26,9 @@ void mechanoid_control() {
     }
     
     if (sys.dimension_size(видимые_флаги, 0) != 0) {
-        движение.target_movement(механоид, видимые_флаги[индексы_ближайших_флагов[0]].x, видимые_флаги[индексы_ближайших_флагов[0]].y);
+        движение.defaultMovement(механоид, видимые_флаги[индексы_ближайших_флагов[0]].x, видимые_флаги[индексы_ближайших_флагов[0]].y);
     }
     else {
-        движение.default_movement(механоид, 50.0, false);   
+        движение.targetMovement(механоид, 50.0, false);   
     }
 }

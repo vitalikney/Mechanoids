@@ -3,7 +3,7 @@ import "параметры_неизм.scriptc0" type Константы конс
 import "механоид.scriptc0" type Механоид;
 
 // Движение, когда у механоида нет цели. Движение по квадрату
-void default_movement(Механоид м, float длина_стороны, bool reset) {
+void defaultMovement(Механоид м, float длина_стороны, bool reset) {
     if(reset) {
         м.вершина.x = м.д.y1;
         м.вершина.z = м.д.y3;
@@ -50,7 +50,7 @@ void default_movement(Механоид м, float длина_стороны, bool
 }
 
 // Движение, когда у механоида есть цель
-void target_movement(Механоид м,  float x, float z) {
+void targetMovement(Механоид м,  float x, float z) {
     м.д.xc = x;
     м.д.zc = z;
 }
