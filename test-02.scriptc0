@@ -1,5 +1,8 @@
-﻿int a = 10;
+﻿import "test-03.scriptc0" type Rocket r0;
+
+int a = 10;
 
 void function () {
-    sys.print("hello!");
+    sys.print("function!");
+    r0.rocketLaunch();
     }

@@ -1,0 +1,6 @@
+﻿int a = 10;
+
+void rocketLaunch() {
+    sys.print("rocketLaunch! " + a);
+    a = a - 1;
+    }

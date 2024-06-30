@@ -1,0 +1,28 @@
+﻿float FLOAT_SQUARE_DOWN_LIMIT = 1e-100;
+
+float limit(float x, float xmin, float xmax)
+{
+    return (x > xmax) ? (xmax) : ((x < xmin) ?  xmin : x);
+}
+
+float excludeZero(float x)
+{
+    if (math.abs(x) < FLOAT_SQUARE_DOWN_LIMIT)
+    {
+        return (x < 0.0)
+                ? (-FLOAT_SQUARE_DOWN_LIMIT)
+                : (FLOAT_SQUARE_DOWN_LIMIT);
+    }
+
+    return x;
+}
+
+float vector3dLength(float x, float y, float z)
+{
+    return math.sqrt(x^2 + y^2 + z^2);
+}
+
+float vector2dLength(float x, float y)
+{
+    return math.sqrt(x^2 + y^2);
+}

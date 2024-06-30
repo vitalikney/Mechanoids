@@ -1,2 +1,3 @@
 ﻿float x;
 float y;
+string тип_элемента;
