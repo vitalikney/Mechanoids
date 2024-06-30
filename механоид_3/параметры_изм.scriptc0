@@ -3,10 +3,10 @@ import "флаг.scriptc0" type Флаг;
 import "механоид.scriptc0" type Механоид;
 import "параметры_неизм.scriptc0" type Константы константы;
 
-void mechanoid_add_status(string name, int health, int load) {
+void mechanoidAddStatus(string name, int health, int load) {
 }
 
-void scene_add(Динамика д){
+void sceneAdd(Динамика д){
 }
 
 // Точки высадки
@@ -50,8 +50,8 @@ void mechanoids_init() {
         м[i].имя = "М"+i;
         // - определяем экипировку
         м[i].fillEquip();
-        mechanoid_add_status(м[i].имя, м[i].здоровье, м[i].пушка.количество_зарядов);
-        scene_add(м[i].д);
+        mechanoidAddStatus(м[i].имя, м[i].здоровье, м[i].пушка.количество_зарядов);
+        sceneAdd(м[i].д);
         // mechanoid.addStatus("М"+i, м[i].здоровье, м[i].пушка.количество_зарядов);
     }
 }
