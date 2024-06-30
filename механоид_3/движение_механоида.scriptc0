@@ -50,7 +50,7 @@ void defaultMovement(Механоид м, float длина_стороны, bool 
 }
 
 // Движение, когда у механоида есть цель
-void targetMovement(Механоид м,  float x, float z) {
+void targetMovement(Механоид м,  float x, float y) {
     м.д.xc = x;
-    м.д.zc = z;
+    м.д.zc = y;
 }

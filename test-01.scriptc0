@@ -1,29 +1,10 @@
 ﻿import "test-02.scriptc0" type test T1;
+import "test-04-mech.scriptc0" type Mechanoid;
 
-/*
-test T1;
-T1.h();
-
-void g(int i, bool t) {
-    sys.print("bye!! " + g.i + " " + g.t);
-}
-
-T1.h = g;
-
-T1.h(1, true);
-
-g.i = 10;
-
-void c(){
-    g(g.i, true);
-}
-
-c();
-
-sys.print(g.i);
-
-c();
-*/
+Mechanoid mechanoid0;
+mechanoid0.size = 100;
+mechanoid0.x = 25;
+mechanoid0.y = 15;
 
 void mechanoid_init() {
     a = a + 1;
@@ -31,5 +12,7 @@ void mechanoid_init() {
     mechanoid.init("-", 200, 200);
 }
 
-T1.r0.rocketLaunch = mechanoid_init;
+auto newList = []; 
+T1.function();
+T1.list = newList;
 T1.function();

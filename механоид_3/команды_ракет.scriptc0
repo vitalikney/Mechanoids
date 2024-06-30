@@ -1,11 +1,15 @@
 ﻿import "параметры_неизм.scriptc0" type Константы константы;
-import "ракета.scriptc0" type Ракета;
+import "динамика.diff" type Динамика;
 import "механоид.scriptc0" type Механоид;
 
-void mechanoid_updateStatus(string name, int health, int load) {
+void mechanoid_update_status(string name, int health, int load) {
 }
 
-void scene_add(Ракета rocket){
+//  mechanoid.addSettings("Ракета " + i + " " + j, mechanoid.Mesh.Square, константы.размер_ракеты, mechanoid.Color.Magenta);
+void mechanoid_add_settings(string name, int shape, int size, int color) {
+}
+
+void scene_add(Динамика д) {
 }
 
 float scene_t() {
@@ -23,7 +27,7 @@ void rocketLaunch(Механоид м, float xj, float zj) {
                 float zj_new;
                 // Уменьшение обоймы 
                 м.пушка.количество_зарядов -= 1;
-                mechanoid_updateStatus("М"+i, м.здоровье, м.пушка.количество_зарядов);
+                mechanoid_update_status(м.имя, м.здоровье, м.пушка.количество_зарядов);
                 // mechanoid.updateStatus("М"+i, м.здоровье, м.пушка.количество_зарядов);
                 int j = 0; 
                 j = м.пушка.количество_зарядов;
@@ -50,6 +54,7 @@ void rocketLaunch(Механоид м, float xj, float zj) {
                 м.пушка.обойма[j].ракета.zc = zj_new;
                 м.пушка.обойма[j].ракета.V_z = константы.скорость_выстрела;
                 scene_add(м.пушка.обойма[j].ракета);
+                mechanoid_add_settings("Ракета" + м.имя + j, 2, константы.размер_ракеты, 9);
                 // scene.add(м.пушка.обойма[j].ракета);
             }
             м.пушка.скорострельность = scene_t();

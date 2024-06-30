@@ -1,8 +1,17 @@
 ﻿import "test-03.scriptc0" type Rocket r0;
+import "test-04-mech.scriptc0" type Mechanoid;
 
-int a = 10;
+int a = 3;
+
+Mechanoid m0;
+Mechanoid list[2];
 
 void function () {
     sys.print("function!");
-    r0.rocketLaunch();
+    // r0.rocketLaunch();
+    sys.print(sys.sizeof(list));
+    for(int i=0; i < sys.sizeof(list); i++) {
+        sys.print(i + ": " + list[i].size);
+    }
+    // sys.print(list[0].size);
     }
