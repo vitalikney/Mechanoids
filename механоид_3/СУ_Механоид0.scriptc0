@@ -1,0 +1,51 @@
+﻿import "элемент.scriptc0" type Элемент;
+import "механоид.scriptc0" type Механоид;
+
+// Входящие параметры в СУ
+Механоид механоид;
+int количество_зарядов;
+
+// Выходящие параметры из СУ
+// Для запуска ракеты необходимо: включить запуск ракеты и передать координаты цели 
+bool out_rocket_launch = false;
+float out_rocket_target_x;
+float out_rocket_target_y;
+
+// Для движения к цели необходимо: включить движение по цели и передать координаты цели
+bool out_target_movement = false;
+float out_target_movement_x;
+float out_target_movement_y;
+
+// Для движения без цели по квадрату необходимо: включить движение по квадрату, передать длину ребра и режим работы
+bool out_default_movement = false;
+float out_default_movement_len;
+bool out_default_movement_mode = false;
+
+// Управление Механоидом 0
+void mechanoidControl() {
+    // rocketHit(i);
+    // vision(i);
+    // flag_catch(i);
+    if (механоид.количество_увиденных_врагов != 0) {
+        if (количество_зарядов != 0) {
+            // оружие.rocketLaunch(механоид, механоид.видимые_враги[индексы_ближайших_врагов[0]].x, механоид.видимые_враги[индексы_ближайших_врагов[0]].y);
+            out_rocket_launch = true;
+            out_rocket_target_x = механоид.видимые_враги[механоид.индексы_ближайших_врагов[0]].x;
+            out_rocket_target_y = механоид.видимые_враги[механоид.индексы_ближайших_врагов[0]].y;
+        }
+        
+    }
+    
+    if (механоид.количество_увиденных_флагов != 0) {    
+        // движение.targetMovement(механоид, механоид.видимые_флаги[индексы_ближайших_флагов[0]].x, механоид.видимые_флаги[индексы_ближайших_флагов[0]].y);
+        out_target_movement = true;
+        out_target_movement_x = механоид.видимые_флаги[механоид.индексы_ближайших_флагов[0]].x;
+        out_target_movement_y = механоид.видимые_флаги[механоид.индексы_ближайших_флагов[0]].y;
+    }
+    else {
+        // движение.defaultMovement(механоид, 50.0, false);   
+        out_default_movement = true;
+        out_default_movement_len = 50.0;
+        out_default_movement_mode = false;
+    }
+}
