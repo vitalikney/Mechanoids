@@ -4,14 +4,15 @@ import "test-04-mech.scriptc0" type Mechanoid;
 int a = 3;
 
 Mechanoid m0;
-Mechanoid list[2];
+Mechanoid list[4];
 
 void function () {
     sys.print("function!");
     // r0.rocketLaunch();
     sys.print(sys.sizeof(list));
-    for(int i=0; i < sys.sizeof(list); i++) {
-        sys.print(i + ": " + list[i].size);
+    sys.print(sys.dimension_size(list, 0));
+    for(int i=0; i < sys.dimension_size(list, 0); i++) {
+        sys.print(i + ": " + list[i].x + " " + list[i].y);
     }
     // sys.print(list[0].size);
     }

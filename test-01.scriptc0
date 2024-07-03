@@ -12,7 +12,21 @@ void mechanoid_init() {
     mechanoid.init("-", 200, 200);
 }
 
+/*
 auto newList = []; 
 T1.function();
+T1.list = newList;
+T1.function();
+*/
+Mechanoid newList0[3, 2];
+sys.print(sys.sizeof(newList0));
+sys.print(sys.dimension_size(newList0, 1));
+
+T1.list[0].x = 5;
+T1.list[1].x = 8;
+T1.list[2].x = 10;
+T1.list[3].x = 40;
+T1.function();
+Mechanoid newList[3];
 T1.list = newList;
 T1.function();
