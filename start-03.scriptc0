@@ -325,9 +325,8 @@ void onIteration() {
         СУ0.mechanoidControl();
         
         // Обработка выходящих данных из СУ0
-        if (СУ0.out_rocket_launch == true && (scene.t() - параметры.м[0].пушка.время_выстрела) > параметры.м[0].пушка.скорострельность) {
+        if (СУ0.out_rocket_launch == true) {
             оружие.rocketLaunch(параметры.м[0], СУ0.out_rocket_target_x, СУ0.out_rocket_target_y);
-            параметры.м[0].пушка.время_выстрела = scene.t();
             //mechanoid.sendLogMsg("Механоид " + 0 + " время выстрела " + параметры.м[0].пушка.время_выстрела);
         }
         if (СУ0.out_target_movement == true) {
@@ -350,9 +349,9 @@ void onIteration() {
         СУ1.mechanoidControl();
         
         // Обработка выходящих данных из СУ1
-        if (СУ1.out_rocket_launch == true && (scene.t() - параметры.м[1].пушка.время_выстрела) > параметры.м[1].пушка.скорострельность) {
+        if (СУ1.out_rocket_launch == true) {
             оружие.rocketLaunch(параметры.м[1], СУ1.out_rocket_target_x, СУ1.out_rocket_target_y);
-            параметры.м[1].пушка.время_выстрела = scene.t();
+            //mechanoid.sendLogMsg("Механоид " + 1 + " время выстрела " + параметры.м[1].пушка.время_выстрела);
         }
         if (СУ1.out_target_movement == true) {
             движение.targetMovement(параметры.м[1], СУ1.out_target_movement_x, СУ1.out_target_movement_y);
@@ -374,9 +373,9 @@ void onIteration() {
         СУ2.mechanoidControl();
         
         // Обработка выходящих данных из СУ2
-        if (СУ2.out_rocket_launch == true && (scene.t() - параметры.м[2].пушка.время_выстрела) > параметры.м[2].пушка.скорострельность) {
+        if (СУ2.out_rocket_launch == true) {
             оружие.rocketLaunch(параметры.м[2], СУ2.out_rocket_target_x, СУ2.out_rocket_target_y);
-            параметры.м[2].пушка.время_выстрела = scene.t();
+            //mechanoid.sendLogMsg("Механоид " + 2 + " время выстрела " + параметры.м[2].пушка.время_выстрела);
         }
         if (СУ2.out_target_movement == true) {
             движение.targetMovement(параметры.м[2], СУ2.out_target_movement_x, СУ2.out_target_movement_y);
@@ -398,9 +397,9 @@ void onIteration() {
         СУ3.mechanoidControl();
         
         // Обработка выходящих данных из СУ3
-        if (СУ3.out_rocket_launch == true && (scene.t() - параметры.м[3].пушка.время_выстрела) > параметры.м[3].пушка.скорострельность) {
+        if (СУ3.out_rocket_launch == true) {
             оружие.rocketLaunch(параметры.м[3], СУ3.out_rocket_target_x, СУ3.out_rocket_target_y);
-            параметры.м[3].пушка.время_выстрела = scene.t();
+            //mechanoid.sendLogMsg("Механоид " + 3 + " время выстрела " + параметры.м[3].пушка.время_выстрела);
         }
         if (СУ3.out_target_movement == true) {
             движение.targetMovement(параметры.м[3], СУ3.out_target_movement_x, СУ3.out_target_movement_y);
