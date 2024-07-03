@@ -21,11 +21,19 @@ bool out_default_movement = false;
 float out_default_movement_len;
 bool out_default_movement_mode = false;
 
+// Для движения без цели по синусу необходимо: включить движение по синусу, передать дельту между координат и режим работы
+bool out_default_sinus_movement = false;
+float out_default_sinus_movement_amplitude;
+float out_default_sinus_movement_len;
+int out_default_sinus_movement_mode;
+// bool out_default_sinus_movement_mode = false;
+
 // Управление Механоидом 0
 void mechanoidControl() {
     // rocketHit(i);
     // vision(i);
     // flag_catch(i);
+    /*
     if (механоид.количество_увиденных_врагов != 0) {
         if (количество_зарядов != 0) {
             // оружие.rocketLaunch(механоид, механоид.видимые_враги[индексы_ближайших_врагов[0]].x, механоид.видимые_враги[индексы_ближайших_врагов[0]].y);
@@ -43,9 +51,20 @@ void mechanoidControl() {
         out_target_movement_y = механоид.видимые_флаги[механоид.индексы_ближайших_флагов[0]].y;
     }
     else {
+        /*
         // движение.defaultMovement(механоид, 60.0, false);   
         out_default_movement = true;
         out_default_movement_len = 60.0;
         out_default_movement_mode = false;
+        
+        out_default_sinus_movement = true;
+        out_default_sinus_movement_amplitude = 50;
+        out_default_sinus_movement_len = 1;
+        out_default_sinus_movement_mode = 0;
     }
+    */
+    out_default_sinus_movement = true;
+    out_default_sinus_movement_amplitude = 20;
+    out_default_sinus_movement_len = 0.0001;
+    out_default_sinus_movement_mode = 0;
 }

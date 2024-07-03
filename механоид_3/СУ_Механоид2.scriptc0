@@ -21,6 +21,12 @@ bool out_default_movement = false;
 float out_default_movement_len;
 bool out_default_movement_mode = false;
 
+// Для движения без цели по синусу необходимо: включить движение по синусу, передать дельту между координат и режим работы
+bool out_default_sinus_movement = false;
+float out_default_sinus_movement_amplitude;
+float out_default_sinus_movement_len;
+int out_default_sinus_movement_mode;
+
 // Управление Механоидом 0
 void mechanoidControl() {
     // rocketHit(i);

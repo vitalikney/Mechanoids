@@ -26,7 +26,7 @@ void rocketLaunch(Механоид м, float xj, float zj) {
     
     if (м.пушка.количество_зарядов != 0) {
         // sys.print("(X1, y1): " + м[i].д.y1 + ", " + м[i].д.y3 + " (x2, y2) : " + xj + ", " + zj);
-        if ((scene.t() - м.пушка.время_выстрела) > м.пушка.скорострельность) {    
+        if ((sceneT() - м.пушка.время_выстрела) > м.пушка.скорострельность) {    
             if ((math.toInt(zj - м.д.y3) != 0) || ((math.toInt(xj - м.д.y1) != 0))) {
                 float xj_new; 
                 float zj_new;

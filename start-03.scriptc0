@@ -54,6 +54,8 @@ float sceneT() {
 оружие.sceneRemove = sceneRemove;
 оружие.sceneT = sceneT;
 
+движение.sceneT = sceneT;
+
 
 /*
 for(int i=0; i < константы.количество_механоидов; ++i) {
@@ -321,6 +323,7 @@ void onIteration() {
         СУ0.out_rocket_launch = false;
         СУ0.out_target_movement = false;
         СУ0.out_default_movement = false;
+        СУ0.out_default_sinus_movement = false;
         
         СУ0.mechanoidControl();
         
@@ -345,6 +348,7 @@ void onIteration() {
         СУ1.out_rocket_launch = false;
         СУ1.out_target_movement = false;
         СУ1.out_default_movement = false;
+        СУ1.out_default_sinus_movement = false;
         
         СУ1.mechanoidControl();
         
@@ -369,6 +373,7 @@ void onIteration() {
         СУ2.out_rocket_launch = false;
         СУ2.out_target_movement = false;
         СУ2.out_default_movement = false;
+        СУ2.out_default_sinus_movement = false;
         
         СУ2.mechanoidControl();
         
@@ -393,6 +398,7 @@ void onIteration() {
         СУ3.out_rocket_launch = false;
         СУ3.out_target_movement = false;
         СУ3.out_default_movement = false;
+        СУ3.out_default_sinus_movement = false;
         
         СУ3.mechanoidControl();
         
@@ -406,6 +412,10 @@ void onIteration() {
         }
         if (СУ3.out_default_movement == true) {
             движение.defaultMovement(параметры.м[3], СУ3.out_default_movement_len, СУ3.out_default_movement_mode);
+        }
+        
+        if (СУ3.out_default_sinus_movement == true) {
+            движение.defaultSinusMovement(параметры.м[3], СУ3.out_default_sinus_movement_amplitude, СУ3.out_default_sinus_movement_len, СУ3.out_default_sinus_movement_mode);
         }
         
         // mechanoid3Control();
