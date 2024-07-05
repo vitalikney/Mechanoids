@@ -6,8 +6,20 @@ import "параметры_неизм.scriptc0" type Константы конс
 void mechanoidAddStatus(string name, int health, int load) {
 }
 
+void mechanoidAddSettings(string name, int shape, int size, int color) {
+}
+
+void mechanoidAddPoint(string name, float x, float y) {
+}
+
+void mechanoidEnableLabelView(string name) {
+}
+
 void sceneAdd(Динамика д){
 }
+
+int mechanoid_mesh_triangle;
+int mechanoid_color_yellow;
 
 // Точки высадки
 auto точки_высадки = [
@@ -59,17 +71,24 @@ auto точки_высадки = [
 флаг10.x = 68.0;
 флаг10.y = 120.0;
 
-
-
 int количество_захваченных_флагов = 0;
 Флаг флаг[константы.количество_флагов] = [флаг1, флаг2, флаг3, флаг4, флаг5, флаг6, флаг7, флаг8, флаг9, флаг10];
+
+void falgsInit() {
+    for (int i =0; i < константы.количество_флагов; i++) {
+        mechanoidAddSettings("Ф" + i, mechanoid_mesh_triangle, константы.размер_флага, mechanoid_color_yellow);
+        mechanoidEnableLabelView("Ф" + i);
+        mechanoidAddPoint("Ф" + i, флаг[i].x, флаг[i].y);
+        флаг[i].отображать = true;
+    }
+}
 
 // Настройка механоидов
 Механоид образец;
 Механоид м[константы.количество_механоидов] = [образец, образец, образец, образец];
 
-void mechanoids_init() {
-    for(int i=0; i < константы.количество_механоидов; ++i) {
+void mechanoidsInit() {
+    for(int i=0; i < константы.количество_механоидов; i++) {
         // Для каждого механоида:
         // - устанавливаем точку высадки
         м[i].д.y1 = точки_высадки[i].x;

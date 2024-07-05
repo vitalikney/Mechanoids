@@ -21,6 +21,11 @@ void sceneRemove(Динамика д) {
 float sceneT() {
 }
 
+int mechanoid_mesh_square;
+int mechanoid_color_magenta;
+// mechanoid.Mesh.Square
+// mechanoid.Color.Magenta
+
 // Запсукает снаряд пушки из обоймы
 void rocketLaunch(Механоид м, float xj, float zj) {
     
@@ -41,6 +46,8 @@ void rocketLaunch(Механоид м, float xj, float zj) {
                 м.пушка.обойма[j].ракета.y1 = м.д.y1;
                 м.пушка.обойма[j].ракета.y2 = м.д.y2;
                 м.пушка.обойма[j].ракета.y3 = м.д.y3;
+                м.пушка.обойма[j].ракета.y4 = м.д.y4;
+                м.пушка.обойма[j].ракета.y6 = м.д.y6;
                 
                 // При помощи урванения прямой
                 if (xj >= м.д.y1) 
